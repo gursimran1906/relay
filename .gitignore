@@ -1,12 +1,18 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
+<<<<<<< HEAD
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 package-lock.json
 yarn.lock
+=======
+/node_modules
+/.pnp
+.pnp.js
+>>>>>>> f4d94b00ca7502cba887703c6189c163afaa3321
 
 # testing
 /coverage
@@ -23,6 +29,7 @@ yarn.lock
 *.pem
 
 # debug
+<<<<<<< HEAD
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -36,6 +43,15 @@ yarn.lock
 .env.development.local
 .env.test.local
 .env.production.local
+=======
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env
+>>>>>>> f4d94b00ca7502cba887703c6189c163afaa3321
 
 # vercel
 .vercel
@@ -43,6 +59,7 @@ yarn.lock
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+<<<<<<< HEAD
 
 # IDE and editor files
 .vscode/
@@ -141,3 +158,5 @@ storybook-static/
 **/public/sw.js.map
 **/public/workbox-*.js.map
 **/public/worker-*.js.map
+=======
+>>>>>>> f4d94b00ca7502cba887703c6189c163afaa3321
