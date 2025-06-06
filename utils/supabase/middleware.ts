@@ -43,6 +43,7 @@ export async function updateSession(request: NextRequest) {
 
   // Define public routes that don't require authentication
   const publicRoutes = [
+    "/report/*",
     "/auth/login",
     "/auth/signup",
     "/auth/callback",
@@ -52,7 +53,7 @@ export async function updateSession(request: NextRequest) {
   ];
 
   // Define API routes that don't require authentication
-  const publicApiRoutes = ["/api/auth"];
+  const publicApiRoutes = ["/api/auth", "/api/report-issue"];
 
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route)
