@@ -2,15 +2,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  // Allow public access to report pages without any authentication
-  if (request.nextUrl.pathname.startsWith("/report/")) {
-    return NextResponse.next();
-  }
-
-  // Allow public access to API routes for report submission
-  if (request.nextUrl.pathname.startsWith("/api/report-issue")) {
-    return NextResponse.next();
-  }
 
   // update user's auth session for all other routes
   return await updateSession(request);
@@ -28,6 +19,6 @@ export const config = {
      * - public assets (images, etc.)
      * Feel free to modify this pattern to include more paths.
      */
-    "/((?!_next/static|_next/image|favicon.ico|auth|api/auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|report|api/report-issue|auth|api/auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
