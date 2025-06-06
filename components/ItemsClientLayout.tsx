@@ -26,9 +26,9 @@ interface Item {
   name: string;
   location: string | null;
   created_at: string;
-  type: string | null;
+  type: number | null;
   tags: string[] | null;
-  metadata: any | null;
+  metadata: Record<string, unknown> | null;
   last_maintenance_at: string | null;
   status: string | null;
 }
@@ -80,14 +80,14 @@ export function ItemsClientLayout({ initialItems }: ItemsClientLayoutProps) {
       id: item.id,
       uid: item.uid,
       name: item.name,
-      type: item.type || "Unknown",
+      type: item.type?.toString() || "Unknown",
       location: item.location || "Unknown",
       status: item.status || "unknown",
       metadata: item.metadata || {},
     }));
   };
 
-  const handleItemAdded = (newItem: any) => {
+  const handleItemAdded = (newItem: Item) => {
     // Convert the item to match our interface
     const fullItem: Item = {
       id: newItem.id,
@@ -125,8 +125,8 @@ export function ItemsClientLayout({ initialItems }: ItemsClientLayoutProps) {
   const uniqueTypes = [
     ...new Set(
       items
-        .map((item) => item.type)
-        .filter((type): type is string => type !== null)
+        .map((item) => item.type?.toString())
+        .filter((type): type is string => type !== undefined)
     ),
   ];
   const uniqueLocations = [
@@ -143,7 +143,7 @@ export function ItemsClientLayout({ initialItems }: ItemsClientLayoutProps) {
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
       const matchesStatus = !statusFilter || item.status === statusFilter;
-      const matchesType = !typeFilter || item.type === typeFilter;
+      const matchesType = !typeFilter || item.type?.toString() === typeFilter;
       const matchesLocation =
         !locationFilter || item.location === locationFilter;
       const matchesDate =
@@ -184,8 +184,8 @@ export function ItemsClientLayout({ initialItems }: ItemsClientLayoutProps) {
           bValue = b.name.toLowerCase();
           break;
         case "type":
-          aValue = (a.type || "").toLowerCase();
-          bValue = (b.type || "").toLowerCase();
+          aValue = (a.type?.toString() || "").toLowerCase();
+          bValue = (b.type?.toString() || "").toLowerCase();
           break;
         case "location":
           aValue = (a.location || "").toLowerCase();
@@ -483,7 +483,7 @@ export function ItemsClientLayout({ initialItems }: ItemsClientLayoutProps) {
                     <div>
                       <h3 className="font-medium text-gray-900">{item.name}</h3>
                       <p className="text-sm text-gray-500">
-                        {item.type || "Unknown type"}
+                        {item.type?.toString() || "Unknown type"}
                       </p>
                     </div>
                   </div>

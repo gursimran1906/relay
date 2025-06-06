@@ -72,8 +72,8 @@ export default async function ProfilePage() {
       return {
         id: user.id,
         email: user.email || "",
-        full_name: profile.full_name,
-        avatar_url: profile.avatar_url,
+        full_name: profile?.full_name || null,
+        avatar_url: profile?.avatar_url || null,
         items_count: itemsCount || 0,
         issues_count: issuesCount || 0,
         created_at: user.created_at,

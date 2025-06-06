@@ -9,7 +9,10 @@ export default async function ResetPasswordPage() {
 
   // Create session object for client component
   const session = {
-    user,
+    user: {
+      id: user.id,
+      email: user.email,
+    },
     access_token: "",
     refresh_token: "",
     expires_in: 0,

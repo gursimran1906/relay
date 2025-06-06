@@ -52,7 +52,7 @@ interface Issue {
     device_info?: string;
     user_agent?: string;
     timestamp_with_timezone?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   items: {
     name: string;
@@ -181,7 +181,7 @@ export function IssuesClientLayout({ initialIssues }: IssuesClientLayoutProps) {
 
   const handleStatusUpdate = async (issueId: number, newStatus: string) => {
     try {
-      const updateData: any = { status: newStatus };
+      const updateData: Record<string, unknown> = { status: newStatus };
 
       // Add resolved_at timestamp when marking as resolved
       if (newStatus === "resolved") {
@@ -202,7 +202,7 @@ export function IssuesClientLayout({ initialIssues }: IssuesClientLayoutProps) {
                 ...issue,
                 status: newStatus,
                 ...(newStatus === "resolved" && {
-                  resolved_at: updateData.resolved_at,
+                  resolved_at: updateData.resolved_at as string,
                 }),
               }
             : issue
@@ -332,7 +332,15 @@ export function IssuesClientLayout({ initialIssues }: IssuesClientLayoutProps) {
     }
   };
 
-  const getGroupTitle = (groupId: string, groupData: any) => {
+  const getGroupTitle = (
+    groupId: string,
+    groupData: {
+      issues: Issue[];
+      isExpanded: boolean;
+      hasOpenIssues: boolean;
+      hasCriticalIssues: boolean;
+    }
+  ) => {
     if (groupId === "ungrouped") {
       return "Individual Issues";
     }
@@ -378,7 +386,14 @@ export function IssuesClientLayout({ initialIssues }: IssuesClientLayoutProps) {
 
   const filteredAssetGroups = Object.values(assetGroups)
     .map((assetGroup) => {
-      const filteredGroups: { [groupId: string]: any } = {};
+      const filteredGroups: {
+        [groupId: string]: {
+          issues: Issue[];
+          isExpanded: boolean;
+          hasOpenIssues: boolean;
+          hasCriticalIssues: boolean;
+        };
+      } = {};
 
       Object.entries(assetGroup.groups).forEach(([groupId, groupData]) => {
         const filteredGroupIssues = groupData.issues.filter((issue: Issue) =>
@@ -1092,11 +1107,11 @@ export function IssuesClientLayout({ initialIssues }: IssuesClientLayoutProps) {
                                                     : "text-orange-500"
                                                 }`}
                                               />
-                                              <h4 className="font-medium text-gray-900">
+                                              <h4 className="font-medium text-gray-900 text-sm">
                                                 {issue.description}
                                               </h4>
                                               {issue.is_critical && (
-                                                <Zap className="h-4 w-4 text-red-500" />
+                                                <Zap className="h-3 w-3 text-red-500" />
                                               )}
                                             </div>
 
@@ -1108,25 +1123,23 @@ export function IssuesClientLayout({ initialIssues }: IssuesClientLayoutProps) {
                                                   alt="Issue attachment"
                                                 />
                                               ) : (
-                                                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                  <Package className="h-4 w-4 text-gray-400" />
-                                                  <span className="text-sm text-gray-500">
-                                                    No image uploaded
-                                                  </span>
+                                                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs text-gray-500">
+                                                  <Package className="h-3 w-3" />
+                                                  <span>No image uploaded</span>
                                                 </div>
                                               )}
                                             </div>
 
-                                            <div className="flex flex-wrap items-center gap-3 text-sm">
+                                            <div className="flex flex-wrap items-center gap-2 text-xs">
                                               <span
-                                                className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                                className={`px-2 py-1 rounded text-xs ${getStatusColor(
                                                   issue.status
                                                 )}`}
                                               >
                                                 {issue.status.replace("_", " ")}
                                               </span>
                                               <span
-                                                className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(
+                                                className={`px-2 py-1 rounded text-xs ${getUrgencyColor(
                                                   issue.urgency
                                                 )}`}
                                               >
@@ -1139,7 +1152,7 @@ export function IssuesClientLayout({ initialIssues }: IssuesClientLayoutProps) {
                                                 ).toLocaleDateString()}
                                               </span>
                                               {issue.resolved_at && (
-                                                <span className="text-green-600 flex items-center gap-1 text-xs">
+                                                <span className="text-green-600 flex items-center gap-1">
                                                   <CheckCircle className="h-3 w-3" />
                                                   Resolved{" "}
                                                   {new Date(
@@ -1160,7 +1173,7 @@ export function IssuesClientLayout({ initialIssues }: IssuesClientLayoutProps) {
                                                   e.stopPropagation();
                                                   handleResolveIssue(issue.id);
                                                 }}
-                                                className="flex items-center gap-1 px-3 py-1 bg-green-100 hover:bg-green-200 text-green-700 rounded-full text-xs font-medium transition-colors"
+                                                className="flex items-center gap-1 px-2 py-1 bg-green-50 hover:bg-green-100 text-green-700 rounded text-xs transition-colors"
                                               >
                                                 <CheckCircle className="h-3 w-3" />
                                                 <span>Resolve</span>
@@ -1173,98 +1186,13 @@ export function IssuesClientLayout({ initialIssues }: IssuesClientLayoutProps) {
                                                 e.stopPropagation();
                                                 setSelectedIssue(issue);
                                               }}
-                                              className="flex items-center gap-1 px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full text-xs font-medium transition-colors"
+                                              className="flex items-center gap-1 px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded text-xs transition-colors"
                                             >
                                               <span>Details</span>
                                               <ChevronRight className="h-3 w-3" />
                                             </button>
                                           </div>
                                         </div>
-
-                                        {/* Internal Notes Section */}
-                                        <div className="mt-3">
-                                          <h5 className="text-xs font-medium text-gray-600 mb-2">
-                                            Internal Notes
-                                          </h5>
-                                          {editingNotes === issue.id ? (
-                                            <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                                              <textarea
-                                                value={notesValue}
-                                                onChange={(e) =>
-                                                  setNotesValue(e.target.value)
-                                                }
-                                                placeholder="Add internal notes..."
-                                                className="w-full p-2 border border-gray-300 rounded text-sm resize-none"
-                                                rows={3}
-                                              />
-                                              <div className="flex gap-2 mt-2">
-                                                <button
-                                                  onClick={() =>
-                                                    handleSaveNotes(
-                                                      issue.id,
-                                                      notesValue
-                                                    )
-                                                  }
-                                                  className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
-                                                >
-                                                  Save
-                                                </button>
-                                                <button
-                                                  onClick={() => {
-                                                    setEditingNotes(null);
-                                                    setNotesValue("");
-                                                  }}
-                                                  className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-xs hover:bg-gray-400"
-                                                >
-                                                  Cancel
-                                                </button>
-                                              </div>
-                                            </div>
-                                          ) : (
-                                            <div>
-                                              {issue.internal_notes ? (
-                                                <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200 mb-2">
-                                                  <p className="text-sm text-gray-700">
-                                                    {issue.internal_notes}
-                                                  </p>
-                                                </div>
-                                              ) : (
-                                                <div className="p-2 bg-gray-50 rounded border border-gray-200 mb-2">
-                                                  <p className="text-xs text-gray-500 italic">
-                                                    No internal notes
-                                                  </p>
-                                                </div>
-                                              )}
-                                              <button
-                                                onClick={() =>
-                                                  startEditingNotes(issue)
-                                                }
-                                                className="text-xs text-blue-600 hover:text-blue-800"
-                                              >
-                                                {issue.internal_notes
-                                                  ? "Edit notes"
-                                                  : "Add internal notes"}
-                                              </button>
-                                            </div>
-                                          )}
-                                        </div>
-
-                                        {/* Metadata Display */}
-                                        {issue.metadata?.reporter_location && (
-                                          <div className="text-xs text-gray-500 flex items-center gap-1 mt-2">
-                                            <MapPin className="h-3 w-3" />
-                                            <span>
-                                              Reported from:{" "}
-                                              {issue.metadata.reporter_location.latitude.toFixed(
-                                                4
-                                              )}
-                                              ,{" "}
-                                              {issue.metadata.reporter_location.longitude.toFixed(
-                                                4
-                                              )}
-                                            </span>
-                                          </div>
-                                        )}
                                       </div>
                                     ))}
                                   </div>
@@ -1283,21 +1211,19 @@ export function IssuesClientLayout({ initialIssues }: IssuesClientLayoutProps) {
 
           {/* Empty State */}
           {filteredAssetGroups.length === 0 && (
-            <div className="text-center py-16">
-              <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <AlertTriangle className="h-8 w-8 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-medium text-gray-900 mb-2">
+            <div className="text-center py-12">
+              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
                 No issues found
               </h3>
-              <p className="text-gray-500 mb-8 max-w-md mx-auto">
+              <p className="text-gray-500 mb-6">
                 {issues.length === 0
-                  ? "Get started by reporting your first issue for any of your assets."
-                  : "Try adjusting your search or filter criteria to find what you're looking for."}
+                  ? "Get started by reporting your first issue."
+                  : "Try adjusting your search or filter criteria."}
               </p>
               <button
                 onClick={() => router.push("/issues/new")}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="h-5 w-5" />
                 <span>Report New Issue</span>

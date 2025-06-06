@@ -4,6 +4,19 @@ import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
+interface IssueWithItems {
+  id: number;
+  description: string;
+  status: string;
+  urgency: string;
+  reported_at: string;
+  items?: {
+    name?: string;
+    location?: string;
+    user_id: string;
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -69,7 +82,7 @@ Respond only with valid JSON:
       console.error("Error parsing interpretation response:", parseError);
       // Fallback to basic text search
       filters = {
-        searchTerms: query.split(" ").filter((word) => word.length > 2),
+        searchTerms: query.split(" ").filter((word: string) => word.length > 2),
       };
     }
 
@@ -132,7 +145,7 @@ Respond only with valid JSON:
       const searchTermsLower = filters.searchTerms.map((term: string) =>
         term.toLowerCase()
       );
-      results = results.filter((issue: any) => {
+      results = results.filter((issue: IssueWithItems) => {
         const searchableText = issue.description.toLowerCase();
         return searchTermsLower.some((term: string) =>
           searchableText.includes(term)
@@ -142,14 +155,14 @@ Respond only with valid JSON:
 
     if (filters.assetLocation) {
       const locationLower = filters.assetLocation.toLowerCase();
-      results = results.filter((issue: any) =>
+      results = results.filter((issue: IssueWithItems) =>
         issue.items?.location?.toLowerCase().includes(locationLower)
       );
     }
 
     if (filters.assetName) {
       const nameLower = filters.assetName.toLowerCase();
-      results = results.filter((issue: any) =>
+      results = results.filter((issue: IssueWithItems) =>
         issue.items?.name?.toLowerCase().includes(nameLower)
       );
     }

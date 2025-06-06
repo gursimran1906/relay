@@ -8,9 +8,9 @@ interface Item {
   name: string;
   location: string | null;
   created_at: string;
-  type: string | null;
+  type: number | null;
   tags: string[] | null;
-  metadata: any | null;
+  metadata: Record<string, unknown> | null;
   last_maintenance_at: string | null;
   status: string | null;
 }

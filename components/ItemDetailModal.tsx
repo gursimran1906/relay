@@ -9,9 +9,9 @@ interface Item {
   name: string;
   location: string | null;
   created_at: string;
-  type: string | null;
+  type: number | null;
   tags: string[] | null;
-  metadata: any | null;
+  metadata: Record<string, unknown> | null;
   last_maintenance_at: string | null;
   status: string | null;
 }
@@ -77,7 +77,7 @@ export function ItemDetailModal({
               <div>
                 <p className="text-xs text-gray-500 mb-1">Type</p>
                 <p className="text-sm text-gray-900">
-                  {item.type || "Not specified"}
+                  {item.type === null ? "Not specified" : item.type.toString()}
                 </p>
               </div>
               <div>

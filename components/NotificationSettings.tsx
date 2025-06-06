@@ -88,7 +88,10 @@ export function NotificationSettings() {
     }
   };
 
-  const updatePreference = (key: keyof NotificationPreferences, value: any) => {
+  const updatePreference = (
+    key: keyof NotificationPreferences,
+    value: boolean | string
+  ) => {
     if (!preferences) return;
     setPreferences({ ...preferences, [key]: value });
   };

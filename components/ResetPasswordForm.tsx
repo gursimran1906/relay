@@ -7,7 +7,7 @@ import { toast } from "react-hot-toast";
 interface Session {
   user: {
     id: string;
-    email: string;
+    email: string | undefined;
   };
   access_token: string;
   refresh_token: string;
