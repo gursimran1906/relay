@@ -27,8 +27,7 @@ export default async function ReportIssuePage({
   const { uid } = await params;
   const urlSearchParams = await searchParams;
 
-  console.log("Report page accessed with UID:", uid);
-  console.log("URL parameters:", urlSearchParams);
+
 
   // Extract asset data from URL parameters
   const searchParamsObj = new URLSearchParams();
@@ -41,7 +40,6 @@ export default async function ReportIssuePage({
   const assetData = getAssetDataFromUrl(searchParamsObj);
 
   if (!assetData) {
-    console.log("Missing required asset data in URL parameters");
     notFound();
   }
 
@@ -55,8 +53,6 @@ export default async function ReportIssuePage({
     status: "unknown", // Default status
     metadata: {},
   };
-
-  console.log("Asset data from URL:", asset);
 
   return (
     <div className="min-h-screen bg-gray-50 py-3 px-3">
