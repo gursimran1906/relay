@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPublicClient } from "@/utils/supabase/public";
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
       itemId,
+      itemUid,
       issueType,
       urgency,
       description,
@@ -16,15 +17,31 @@ export async function POST(request: NextRequest) {
       metadata,
     } = body;
 
-    // Validate required fields
-    if (!itemId || !description?.trim()) {
+    // Validate required fields - need either itemId or itemUid
+    if (!itemId && !itemUid) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        {
+          error: "Missing required fields (need itemId or itemUid)",
+        },
         { status: 400 }
       );
     }
 
-    const supabase = await createPublicClient();
+    // Use simple anon client
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    // Use itemId if provided, otherwise we'll need to handle itemUid differently
+    // For now, if only itemUid is provided, we'll store it in metadata and use a placeholder itemId
+    let actualItemId = itemId;
+
+    if (!actualItemId && itemUid) {
+      // Store the itemUid in metadata for reference and use 0 as placeholder
+      // The system can resolve this later if needed
+      actualItemId = 0;
+    }
 
     // Prepare contact info
     const contactInfo = [reporterName, reporterEmail]
@@ -35,8 +52,10 @@ export async function POST(request: NextRequest) {
     const enhancedMetadata = {
       ...(metadata || {}),
       reporter_email: reporterEmail?.trim() || null,
-      source: "qr_scan",
+      source: itemId ? "authenticated" : "qr_scan",
       submitted_at: new Date().toISOString(),
+      // Store itemUid in metadata if that's what was provided
+      ...(itemUid && !itemId ? { original_item_uid: itemUid } : {}),
     };
 
     // Determine if issue is critical
@@ -44,24 +63,20 @@ export async function POST(request: NextRequest) {
       isCritical || urgency === "critical" || urgency === "high";
 
     // Create issue report using existing issues table
-    const { data, error } = await supabase
-      .from("issues")
-      .insert([
-        {
-          item_id: itemId,
-          description: description.trim(),
-          issue_type: issueType || null,
-          urgency: urgency || "medium",
-          reported_by: reporterName?.trim() || null,
-          contact_info: contactInfo || null,
-          is_critical: isIssueCritical,
-          status: "open",
-          image_path: imagePath || null,
-          metadata: enhancedMetadata,
-        },
-      ])
-      .select()
-      .single();
+    const { data, error } = await supabase.from("issues").insert([
+      {
+        item_id: actualItemId,
+        description: description?.trim() || null,
+        issue_type: issueType || null,
+        urgency: urgency || "medium",
+        reported_by: reporterName?.trim() || null,
+        contact_info: contactInfo || null,
+        is_critical: isIssueCritical,
+        status: "open",
+        image_path: imagePath || null,
+        metadata: enhancedMetadata,
+      },
+    ]);
 
     if (error) {
       console.error("Error creating issue report:", error);
@@ -71,48 +86,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Trigger notifications after successful issue creation
-    try {
-      const notificationResponse = await fetch(
-        `${request.nextUrl.origin}/api/notifications/send`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            issueId: data.id,
-            itemId: itemId,
-            description: description.trim(),
-            isCritical: isIssueCritical,
-            urgency: urgency || "medium",
-          }),
-        }
-      );
-
-      if (!notificationResponse.ok) {
-        console.error(
-          "Failed to send notifications:",
-          await notificationResponse.text()
-        );
-        // Don't fail the entire request if notifications fail
-      } else {
-        const notificationResult = await notificationResponse.json();
-        console.log(
-          `Sent ${notificationResult.notifications_sent} notifications for issue ${data.id}`
-        );
-      }
-    } catch (notificationError) {
-      console.error("Error sending notifications:", notificationError);
-      // Don't fail the entire request if notifications fail
-    }
-
     return NextResponse.json({
       success: true,
-      issue: data,
       message: isIssueCritical
-        ? "Critical issue reported successfully! Notifications have been sent."
-        : "Issue reported successfully! Notifications have been sent.",
+        ? "Critical issue reported successfully!"
+        : "Issue reported successfully!",
     });
   } catch (error) {
     console.error("Error in report-issue API:", error);

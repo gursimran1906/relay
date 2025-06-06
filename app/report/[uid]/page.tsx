@@ -1,48 +1,62 @@
-import { createPublicClient } from "@/utils/supabase/public";
 import { ReportIssueForm } from "@/components/ReportIssueForm";
 import { Package, AlertTriangle } from "lucide-react";
 import { notFound } from "next/navigation";
+import { getAssetDataFromUrl } from "@/utils/assetUrl";
+
+interface Asset {
+  id: number;
+  uid: string;
+  name: string;
+  type: string;
+  location: string;
+  status: string;
+  metadata?: {
+    department?: string;
+    criticality?: string;
+    description?: string;
+  };
+}
 
 export default async function ReportIssuePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ uid: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const supabase = await createPublicClient();
-
-  // Await params to fix Next.js 15+ requirement
   const { uid } = await params;
+  const urlSearchParams = await searchParams;
 
   console.log("Report page accessed with UID:", uid);
+  console.log("URL parameters:", urlSearchParams);
 
-  // Fetch asset details using the UID
-  const { data: asset, error } = await supabase
-    .from("items")
-    .select("*")
-    .eq("uid", uid)
-    .single();
+  // Extract asset data from URL parameters
+  const searchParamsObj = new URLSearchParams();
+  Object.entries(urlSearchParams).forEach(([key, value]) => {
+    if (typeof value === "string") {
+      searchParamsObj.set(key, value);
+    }
+  });
 
-  console.log("Database query result:", { asset, error });
+  const assetData = getAssetDataFromUrl(searchParamsObj);
 
-  if (error || !asset) {
-    console.log("Asset not found, calling notFound()");
+  if (!assetData) {
+    console.log("Missing required asset data in URL parameters");
     notFound();
   }
 
-  const getCriticalityColor = (criticality?: string) => {
-    switch (criticality) {
-      case "critical":
-        return "bg-red-100 text-red-800";
-      case "high":
-        return "bg-orange-100 text-orange-800";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800";
-      case "low":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  // Create asset object for the form
+  const asset: Asset = {
+    id: 0, // Use 0 to indicate this is a public report
+    uid: uid,
+    name: assetData.name,
+    type: "Equipment", // Default type since we don't have it
+    location: assetData.location,
+    status: "unknown", // Default status
+    metadata: {},
   };
+
+  console.log("Asset data from URL:", asset);
 
   return (
     <div className="min-h-screen bg-gray-50 py-3 px-3">
@@ -80,28 +94,7 @@ export default async function ReportIssuePage({
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                   {asset.type}
                 </span>
-                {asset.metadata?.department && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    {asset.metadata.department}
-                  </span>
-                )}
-                {asset.metadata?.criticality && (
-                  <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getCriticalityColor(
-                      asset.metadata.criticality
-                    )}`}
-                  >
-                    {asset.metadata.criticality.charAt(0).toUpperCase() +
-                      asset.metadata.criticality.slice(1)}
-                  </span>
-                )}
               </div>
-
-              {asset.metadata?.description && (
-                <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                  {asset.metadata.description}
-                </p>
-              )}
             </div>
           </div>
         </div>

@@ -37,36 +37,82 @@ const sendEmail = async (email: string, subject: string, body: string) => {
 
 export async function POST(request: Request) {
   try {
+    const body = await request.json();
+    const {
+      issueId,
+      itemId,
+      description,
+      isCritical,
+      urgency,
+      // New fields for internal calls
+      itemName,
+      itemLocation,
+      itemOwnerId,
+      isInternalCall = false,
+    } = body;
+
     const supabase = await createClient();
-    const user = await getAuthenticatedUser();
+    let user;
+    let userEmail;
+    let preferences = {};
 
-    const { issueId, itemId, description, isCritical, urgency } =
-      await request.json();
+    if (isInternalCall && itemOwnerId) {
+      // For internal calls (like from report-issue API), we use the item owner's ID
+      // and bypass authentication since this is a server-to-server call
+      const { data: userData } = await supabase.auth.admin.getUserById(
+        itemOwnerId
+      );
+      if (userData?.user) {
+        user = userData.user;
+        userEmail = user.email;
 
-    // Get user notification preferences
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("notification_preferences")
-      .eq("id", user.id)
-      .single();
+        // Get user notification preferences
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("notification_preferences")
+          .eq("id", itemOwnerId)
+          .single();
 
-    const preferences = profile?.notification_preferences || {};
+        preferences = profile?.notification_preferences || {};
+      } else {
+        console.log("Could not find item owner for notifications");
+        return NextResponse.json({ success: true, notifications_sent: 0 });
+      }
+    } else {
+      // For regular authenticated calls
+      user = await getAuthenticatedUser();
+      userEmail = user.email;
 
-    // Get item details
-    const { data: item } = await supabase
-      .from("items")
-      .select("name, location")
-      .eq("id", itemId)
-      .single();
+      // Get user notification preferences
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("notification_preferences")
+        .eq("id", user.id)
+        .single();
 
-    const itemName = item?.name || "Unknown Item";
-    const location = item?.location || "Unknown Location";
+      preferences = profile?.notification_preferences || {};
+    }
+
+    // Use provided item details or fetch from database
+    let finalItemName = itemName;
+    let finalLocation = itemLocation;
+
+    if (!finalItemName || !finalLocation) {
+      const { data: item } = await supabase
+        .from("items")
+        .select("name, location")
+        .eq("id", itemId)
+        .single();
+
+      finalItemName = item?.name || finalItemName || "Unknown Item";
+      finalLocation = item?.location || finalLocation || "Unknown Location";
+    }
 
     // Compose notification message
     const baseMessage = `${
       isCritical ? "CRITICAL ISSUE" : "New Issue"
     }: ${description}`;
-    const fullMessage = `${baseMessage}\n\nItem: ${itemName}\nLocation: ${location}\nUrgency: ${urgency}`;
+    const fullMessage = `${baseMessage}\n\nItem: ${finalItemName}\nLocation: ${finalLocation}\nUrgency: ${urgency}`;
 
     const results = [];
 
@@ -81,20 +127,20 @@ export async function POST(request: Request) {
       }
 
       // Send email for critical issues
-      if (preferences.email_enabled && user.email) {
+      if (preferences.email_enabled && userEmail) {
         const emailResult = await sendEmail(
-          user.email,
-          `New Issue Reported: ${itemName}`,
+          userEmail,
+          `🚨 Critical Issue Reported: ${finalItemName}`,
           fullMessage
         );
         results.push({ type: "email", success: emailResult.success });
       }
     } else {
       // Send email for normal issues
-      if (preferences.email_enabled && user.email) {
+      if (preferences.email_enabled && userEmail) {
         const emailResult = await sendEmail(
-          user.email,
-          `New Issue Reported: ${itemName}`,
+          userEmail,
+          `New Issue Reported: ${finalItemName}`,
           fullMessage
         );
         results.push({ type: "email", success: emailResult.success });

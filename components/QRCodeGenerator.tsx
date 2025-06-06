@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import QRCode from "qrcode";
 import jsPDF from "jspdf";
 import { Download, QrCode, Loader2, FileText } from "lucide-react";
+import { generateReportUrl } from "@/utils/assetUrl";
 
 interface Asset {
   id: number;
@@ -30,8 +31,15 @@ export function QRCodeGenerator({ assets }: QRCodeGeneratorProps) {
 
   const generateQRCodePDF = async (asset: Asset) => {
     try {
-      // Generate QR code URL using asset UID for security
-      const qrUrl = `${window.location.origin}/report/${asset.uid}`;
+      // Generate QR code URL with name and location parameters for public access
+      const qrUrl = generateReportUrl(
+        {
+          uid: asset.uid,
+          name: asset.name,
+          location: asset.location,
+        },
+        window.location.origin
+      );
 
       // Generate QR code as data URL
       const qrCodeDataUrl = await QRCode.toDataURL(qrUrl, {
@@ -300,8 +308,15 @@ export function QRCodeGenerator({ assets }: QRCodeGeneratorProps) {
         }
         isFirstPage = false;
 
-        // Generate QR code URL using asset UID for security
-        const qrUrl = `${window.location.origin}/report/${asset.uid}`;
+        // Generate QR code URL with name and location parameters for public access
+        const qrUrl = generateReportUrl(
+          {
+            uid: asset.uid,
+            name: asset.name,
+            location: asset.location,
+          },
+          window.location.origin
+        );
 
         // Generate QR code as data URL
         const qrCodeDataUrl = await QRCode.toDataURL(qrUrl, {

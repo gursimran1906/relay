@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { toast } from "react-hot-toast";
 import {
   Send,
@@ -12,7 +12,6 @@ import {
   Camera,
   Upload,
   X,
-  MapPin,
 } from "lucide-react";
 
 interface Asset {
@@ -31,12 +30,6 @@ interface Asset {
 
 interface ReportIssueFormProps {
   asset: Asset;
-}
-
-interface LocationData {
-  latitude: number;
-  longitude: number;
-  accuracy?: number;
 }
 
 const ISSUE_TYPES = [
@@ -80,38 +73,9 @@ export function ReportIssueForm({ asset }: ReportIssueFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [location, setLocation] = useState<LocationData | null>(null);
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [locationError, setLocationError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-
-  // Get user location on component mount
-  useEffect(() => {
-    if (navigator.geolocation) {
-      setLocationLoading(true);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-          });
-          setLocationLoading(false);
-        },
-        (error) => {
-          setLocationError(error.message);
-          setLocationLoading(false);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000,
-        }
-      );
-    }
-  }, []);
 
   const handleImageSelect = (file: File) => {
     if (file && file.type.startsWith("image/")) {
@@ -147,18 +111,27 @@ export function ReportIssueForm({ asset }: ReportIssueFormProps) {
     if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
-  // Collect metadata for the report
-  const collectMetadata = () => {
+  // Get IP address and collect metadata for the report
+  const collectMetadata = async () => {
     const metadata: any = {
       timestamp_with_timezone: new Date().toISOString(),
       user_agent: navigator.userAgent,
       device_info: `${navigator.platform} - ${navigator.userAgent}`,
       screen_resolution: `${screen.width}x${screen.height}`,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      browser_language: navigator.language,
+      viewport_size: `${window.innerWidth}x${window.innerHeight}`,
+      color_depth: screen.colorDepth,
+      pixel_ratio: window.devicePixelRatio,
+      online_status: navigator.onLine,
+      referrer: document.referrer || "direct",
+      cookies_enabled: navigator.cookieEnabled,
     };
 
-    if (location) {
-      metadata.reporter_location = location;
+    // Add performance timing if available
+    if (performance && performance.timing) {
+      metadata.page_load_time =
+        performance.timing.loadEventEnd - performance.timing.navigationStart;
     }
 
     return metadata;
@@ -207,24 +180,33 @@ export function ReportIssueForm({ asset }: ReportIssueFormProps) {
         }
       }
 
-      const metadata = collectMetadata();
+      const metadata = await collectMetadata();
+
+      // Prepare payload - for public reports (itemId = 0), send itemUid instead
+      const payload: any = {
+        issueType,
+        urgency,
+        description: description.trim() || null,
+        reporterName: reporterName.trim() || null,
+        reporterEmail: reporterEmail.trim() || null,
+        isCritical,
+        imagePath,
+        metadata,
+      };
+
+      // Include either itemId or itemUid based on context
+      if (asset.id && asset.id > 0) {
+        payload.itemId = asset.id;
+      } else {
+        payload.itemUid = asset.uid;
+      }
 
       const response = await fetch("/api/report-issue", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          itemId: asset.id,
-          issueType,
-          urgency,
-          description,
-          reporterName,
-          reporterEmail,
-          isCritical,
-          imagePath,
-          metadata,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -368,7 +350,7 @@ export function ReportIssueForm({ asset }: ReportIssueFormProps) {
             className="block text-sm font-medium text-gray-700 mb-2"
           >
             <MessageSquare className="inline h-4 w-4 mr-1" />
-            Describe the issue *
+            Describe the issue (Optional)
           </label>
           <textarea
             id="description"
@@ -377,7 +359,6 @@ export function ReportIssueForm({ asset }: ReportIssueFormProps) {
             rows={4}
             className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none text-sm sm:text-base"
             placeholder="Please describe what's wrong and any steps you took..."
-            required
           />
         </div>
 
@@ -453,41 +434,6 @@ export function ReportIssueForm({ asset }: ReportIssueFormProps) {
           />
         </div>
 
-        {/* Location Information */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4">
-          <div className="flex items-start gap-2 mb-2">
-            <MapPin className="h-4 w-4 text-blue-600 mt-0.5" />
-            <div className="flex-1">
-              <h4 className="text-sm font-medium text-blue-900">
-                Location Information
-              </h4>
-              {locationLoading ? (
-                <p className="text-xs text-blue-700 mt-1">
-                  Getting your location...
-                </p>
-              ) : location ? (
-                <div className="text-xs text-blue-700 mt-1">
-                  <p>✓ Location captured for accurate reporting</p>
-                  <p className="mt-1 font-mono text-xs opacity-75">
-                    {location.latitude.toFixed(4)},{" "}
-                    {location.longitude.toFixed(4)}
-                    {location.accuracy &&
-                      ` (±${Math.round(location.accuracy)}m)`}
-                  </p>
-                </div>
-              ) : locationError ? (
-                <p className="text-xs text-red-600 mt-1">
-                  Could not get location: {locationError}
-                </p>
-              ) : (
-                <p className="text-xs text-gray-600 mt-1">
-                  Location not available
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
         {/* Reporter Information */}
         <div className="border-t border-gray-200 pt-4 sm:pt-6">
           <h4 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">
@@ -540,9 +486,9 @@ export function ReportIssueForm({ asset }: ReportIssueFormProps) {
         <div className="pt-4">
           <button
             type="submit"
-            disabled={loading || !description.trim()}
+            disabled={loading}
             className={`w-full px-4 sm:px-6 py-4 rounded-xl font-medium text-white transition-colors flex items-center justify-center gap-2 text-sm sm:text-base ${
-              loading || !description.trim()
+              loading
                 ? "bg-gray-400 cursor-not-allowed"
                 : isCritical
                 ? "bg-red-600 hover:bg-red-700"
