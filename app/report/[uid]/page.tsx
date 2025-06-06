@@ -13,6 +13,8 @@ export default async function ReportIssuePage({
   // Await params to fix Next.js 15+ requirement
   const { uid } = await params;
 
+  console.log("Report page accessed with UID:", uid);
+
   // Fetch asset details using the UID
   const { data: asset, error } = await supabase
     .from("items")
@@ -20,7 +22,10 @@ export default async function ReportIssuePage({
     .eq("uid", uid)
     .single();
 
+  console.log("Database query result:", { asset, error });
+
   if (error || !asset) {
+    console.log("Asset not found, calling notFound()");
     notFound();
   }
 
