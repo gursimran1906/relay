@@ -31,9 +31,10 @@ export function QRCodeGenerator({ assets }: QRCodeGeneratorProps) {
 
   const generateQRCodePDF = async (asset: Asset) => {
     try {
-      // Generate QR code URL with name and location parameters for public access
+      // Generate QR code URL with name, location, and ID parameters for public access
       const qrUrl = generateReportUrl(
         {
+          id: asset.id,
           uid: asset.uid,
           name: asset.name,
           location: asset.location,
@@ -308,9 +309,10 @@ export function QRCodeGenerator({ assets }: QRCodeGeneratorProps) {
         }
         isFirstPage = false;
 
-        // Generate QR code URL with name and location parameters for public access
+        // Generate QR code URL with name, location, and ID parameters for public access
         const qrUrl = generateReportUrl(
           {
+            id: asset.id,
             uid: asset.uid,
             name: asset.name,
             location: asset.location,

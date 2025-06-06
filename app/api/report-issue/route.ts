@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createPublicClient } from "@/utils/supabase/public";
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,11 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use simple anon client
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const supabase = await createPublicClient();
 
     // Use itemId if provided, otherwise we'll need to handle itemUid differently
     // For now, if only itemUid is provided, we'll store it in metadata and use a placeholder itemId

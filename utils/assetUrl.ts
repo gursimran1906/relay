@@ -2,19 +2,21 @@
 // This allows report pages to work without any database access for public users
 
 interface AssetData {
+  id: number;
   uid: string;
   name: string;
   location: string;
 }
 
 /**
- * Generate a report URL with asset name and location as URL parameters
+ * Generate a report URL with asset name, location, and ID as URL parameters
  */
 export function generateReportUrl(
   asset: AssetData,
   baseUrl: string = ""
 ): string {
   const params = new URLSearchParams({
+    id: asset.id.toString(),
     name: asset.name,
     location: asset.location,
   });
@@ -28,14 +30,16 @@ export function generateReportUrl(
 export function getAssetDataFromUrl(
   searchParams: URLSearchParams
 ): AssetData | null {
+  const id = searchParams.get("id");
   const name = searchParams.get("name");
   const location = searchParams.get("location");
 
-  if (!name || !location) {
+  if (!id || !name || !location) {
     return null;
   }
 
   return {
+    id: parseInt(id, 10),
     uid: "", // Will be set from the route parameter
     name: decodeURIComponent(name),
     location: decodeURIComponent(location),

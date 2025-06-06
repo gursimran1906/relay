@@ -1,6 +1,14 @@
 import { createClient, getAuthenticatedUser } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
+// Define interface for notification preferences
+interface NotificationPreferences {
+  sms_enabled?: boolean;
+  email_enabled?: boolean;
+  phone_number?: string;
+  [key: string]: any; // Allow additional properties
+}
+
 // Mock notification services - replace with actual implementations
 const sendSMS = async (phoneNumber: string, message: string) => {
   // Using Twilio or similar SMS service
@@ -54,7 +62,7 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     let user;
     let userEmail;
-    let preferences = {};
+    let preferences: NotificationPreferences = {};
 
     if (isInternalCall && itemOwnerId) {
       // For internal calls (like from report-issue API), we use the item owner's ID
@@ -73,7 +81,8 @@ export async function POST(request: Request) {
           .eq("id", itemOwnerId)
           .single();
 
-        preferences = profile?.notification_preferences || {};
+        preferences =
+          (profile?.notification_preferences as NotificationPreferences) || {};
       } else {
         console.log("Could not find item owner for notifications");
         return NextResponse.json({ success: true, notifications_sent: 0 });
@@ -90,7 +99,8 @@ export async function POST(request: Request) {
         .eq("id", user.id)
         .single();
 
-      preferences = profile?.notification_preferences || {};
+      preferences =
+        (profile?.notification_preferences as NotificationPreferences) || {};
     }
 
     // Use provided item details or fetch from database

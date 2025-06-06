@@ -47,7 +47,7 @@ export default async function ReportIssuePage({
 
   // Create asset object for the form
   const asset: Asset = {
-    id: 0, // Use 0 to indicate this is a public report
+    id: assetData.id, // Use the actual item ID from URL parameters
     uid: uid,
     name: assetData.name,
     type: "Equipment", // Default type since we don't have it
