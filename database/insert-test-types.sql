@@ -1,0 +1,28 @@
+-- Insert standard global types (org_id = NULL, is_custom = false)
+INSERT INTO public.types (name, description, category, icon, org_id, is_custom, created_by)
+VALUES
+  ('Server', 'Physical or virtual server equipment', 'IT Equipment', '🖥️', NULL, FALSE, NULL),
+  ('Router', 'Network routing equipment', 'Network Equipment', '📡', NULL, FALSE, NULL),
+  ('Switch', 'Network switching equipment', 'Network Equipment', '🔀', NULL, FALSE, NULL),
+  ('Firewall', 'Network security equipment', 'Security Equipment', '🛡️', NULL, FALSE, NULL),
+  ('UPS', 'Uninterruptible Power Supply', 'Power Equipment', '🔋', NULL, FALSE, NULL),
+  ('Air Conditioner', 'HVAC cooling system', 'HVAC Equipment', '❄️', NULL, FALSE, NULL),
+  ('Generator', 'Backup power generator', 'Power Equipment', '⚡', NULL, FALSE, NULL),
+  ('Security Camera', 'Surveillance camera system', 'Security Equipment', '📹', NULL, FALSE, NULL),
+  ('Access Control', 'Door access control system', 'Security Equipment', '🚪', NULL, FALSE, NULL),
+  ('Printer', 'Document printing equipment', 'Office Equipment', '🖨️', NULL, FALSE, NULL),
+  ('Monitor', 'Display monitor', 'IT Equipment', '🖥️', NULL, FALSE, NULL),
+  ('Laptop', 'Portable computer', 'IT Equipment', '💻', NULL, FALSE, NULL),
+  ('Desktop', 'Desktop computer', 'IT Equipment', '🖥️', NULL, FALSE, NULL),
+  ('Phone System', 'Telephone communication system', 'Communication Equipment', '📞', NULL, FALSE, NULL),
+  ('Projector', 'Video projection equipment', 'AV Equipment', '📽️', NULL, FALSE, NULL),
+  ('Scanner', 'Document scanning equipment', 'Office Equipment', '📄', NULL, FALSE, NULL),
+  ('Tablet', 'Mobile tablet device', 'Mobile Equipment', '📱', NULL, FALSE, NULL),
+  ('Network Storage', 'Data storage device', 'Storage Equipment', '💾', NULL, FALSE, NULL),
+  ('Backup Drive', 'External backup storage', 'Storage Equipment', '💿', NULL, FALSE, NULL),
+  ('Maintenance Tool', 'Equipment maintenance tools', 'Tools', '🔧', NULL, FALSE, NULL),
+  ('Vehicle', 'Company vehicle or transport', 'Transportation', '🚗', NULL, FALSE, NULL),
+  ('Forklift', 'Material handling equipment', 'Industrial Equipment', '🏗️', NULL, FALSE, NULL),
+  ('Conveyor Belt', 'Material transport system', 'Industrial Equipment', '⚙️', NULL, FALSE, NULL),
+  ('Safety Equipment', 'Personal protective equipment', 'Safety', '⛑️', NULL, FALSE, NULL),
+  ('Cleaning Equipment', 'Facility cleaning tools', 'Maintenance', '🧹', NULL, FALSE, NULL);

@@ -3,25 +3,38 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "security:headers": "curl -I $NEXT_PUBLIC_SITE_URL || curl -I http://localhost:3000",
+    "security:ssl": "nmap --script ssl-enum-ciphers -p 443 $(echo $NEXT_PUBLIC_SITE_URL | sed 's|https://||' | sed 's|/.*||') || echo 'nmap not available'"
   },
   "dependencies": {
+    "@google/genai": "^1.2.0",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.7",
+    "@tailwindcss/postcss": "^4.1.7",
+    "framer-motion": "^12.12.1",
+    "html2canvas": "^1.4.1",
+    "jose": "^6.0.11",
+    "jspdf": "^3.0.1",
+    "lucide-react": "^0.511.0",
+    "next": "15.3.2",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.3.2"
+    "react-hot-toast": "^2.5.2",
+    "stripe": "^18.2.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
-    "eslint": "^9",
-    "eslint-config-next": "15.3.2",
-    "@eslint/eslintrc": "^3"
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.7",
+    "typescript": "^5"
   }
 }
