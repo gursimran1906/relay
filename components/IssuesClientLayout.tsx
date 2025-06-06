@@ -438,13 +438,7 @@ export function IssuesClientLayout({ initialIssues }: IssuesClientLayoutProps) {
                 {Object.keys(assetGroups).length} assets
               </p>
             </div>
-            <button
-              onClick={() => router.push("/issues/new")}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="h-5 w-5" />
-              <span>New Issue</span>
-            </button>
+            
           </div>
 
           {/* Search and Filters */}
